@@ -16,6 +16,7 @@ class ServerlessLambdaEdgePreExistingCloudFront {
           if (functionObj.events) {
             functionObj.events.forEach(async (event) => {
               if (event.preExistingCloudFront) {
+                const functionArn = await this.getlatestVersionLambdaArn(functionObj.name)
                 const config = await this.provider.request('CloudFront', 'getDistribution', {
                   Id: event.preExistingCloudFront.distributionId
                 })
@@ -24,13 +25,15 @@ class ServerlessLambdaEdgePreExistingCloudFront {
                   config.DistributionConfig.DefaultCacheBehavior.LambdaFunctionAssociations = await this.associateFunction(
                     config.DistributionConfig.DefaultCacheBehavior.LambdaFunctionAssociations,
                     event,
-                    functionObj.name
+                    functionObj.name,
+                    functionArn
                   )
                 } else {
                   config.DistributionConfig.CacheBehaviors = await this.associateNonDefaultCacheBehaviors(
                     config.DistributionConfig.CacheBehaviors,
                     event,
-                    functionObj.name
+                    functionObj.name,
+                    functionArn
                   )
                 }
 
@@ -39,6 +42,9 @@ class ServerlessLambdaEdgePreExistingCloudFront {
                   IfMatch: config.ETag,
                   DistributionConfig: config.DistributionConfig
                 })
+                this.serverless.cli.consoleLog(
+                  `${functionArn} is associating to ${event.preExistingCloudFront.distributionId} CloudFront Distribution. waiting for deployed status.`
+                )
               }
             })
           }
@@ -47,26 +53,27 @@ class ServerlessLambdaEdgePreExistingCloudFront {
     }
   }
 
-  async associateNonDefaultCacheBehaviors(cacheBehaviors, event, functionName) {
+  async associateNonDefaultCacheBehaviors(cacheBehaviors, event, functionName, functionArn) {
     for (let i = 0; i < cacheBehaviors.Items.length; i++) {
       if (event.preExistingCloudFront.pathPattern === cacheBehaviors.Items[i].PathPattern) {
         cacheBehaviors.Items[i].LambdaFunctionAssociations = await this.associateFunction(
           cacheBehaviors.Items[i].LambdaFunctionAssociations,
           event,
-          functionName
+          functionName,
+          functionArn
         )
       }
     }
     return cacheBehaviors
   }
 
-  async associateFunction(lambdaFunctionAssociations, event, functionName) {
+  async associateFunction(lambdaFunctionAssociations, event, functionName, functionArn) {
     const originals = lambdaFunctionAssociations.Items.filter(
       (x) => x.EventType !== event.preExistingCloudFront.eventType
     )
     lambdaFunctionAssociations.Items = originals
     lambdaFunctionAssociations.Items.push({
-      LambdaFunctionARN: await this.getlatestVersionLambdaArn(functionName),
+      LambdaFunctionARN: functionArn,
       IncludeBody: event.preExistingCloudFront.includeBody,
       EventType: event.preExistingCloudFront.eventType
     })
