@@ -1,5 +1,5 @@
 # Serverless Lambda Edge PreExisting CloudFront
-The Serverless Framework plugin which associates Lambda@Edge against pre-existing CloudFront distribution.
+A Serverless Framework plugin which associates Lambda@Edge against pre-existing CloudFront distributions.
 
 ## Install
 
@@ -11,7 +11,7 @@ $ npm install --save-dev serverless-lambda-edge-pre-existing-cloudfront
 
 ## How it works
 
-Here is configuration in your serverless.yml
+Configure serverless.yml
 
 ```yaml
 functions:
@@ -28,7 +28,7 @@ plugins:
   - serverless-lambda-edge-pre-existing-cloudfront
 ```
 
-And run deploy
+Run deploy
 ```
 $ serverless deploy
 ```
