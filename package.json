@@ -1,0 +1,37 @@
+{
+  "name": "serverless-lambda-edge-pre-existing-cloudfront",
+  "version": "1.0.0",
+  "description": "The Serverless Framework plugin which creates Lambda@Edge against pre-existing CloudFront.",
+  "main": "index.js",
+  "author": "serverless-operations",
+  "license": "MIT",
+  "scripts": {
+    "lint": "eslint .",
+    "fmt": "eslint . --fix --cache",
+    "semantic-release": "semantic-release"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
+  "lint-staged": {
+    "*.js": [
+      "eslint"
+    ]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^8.3.5",
+    "@commitlint/config-conventional": "^8.3.4",
+    "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.10.0",
+    "eslint-plugin-import": "^2.20.1",
+    "eslint-plugin-prettier": "^3.1.2",
+    "husky": "^4.2.3",
+    "lint-staged": "^10.0.8",
+    "prettier": "^1.19.1",
+    "semantic-release": "^17.0.4"
+  },
+  "dependencies": {}
+}
