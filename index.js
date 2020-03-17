@@ -15,7 +15,7 @@ class ServerlessLambdaEdgePreExistingCloudFront {
           const functionObj = this.serverless.service.getFunction(functionName)
           if (functionObj.events) {
             functionObj.events.forEach(async (event) => {
-              if (event.preExistingCloudFront) {
+              if (event.preExistingCloudFront && this.checkAllowedDeployStage()) {
                 const functionArn = await this.getlatestVersionLambdaArn(functionObj.name)
                 const config = await this.provider.request('CloudFront', 'getDistribution', {
                   Id: event.preExistingCloudFront.distributionId
@@ -51,6 +51,23 @@ class ServerlessLambdaEdgePreExistingCloudFront {
         })
       }
     }
+  }
+
+  checkAllowedDeployStage() {
+    if (
+      this.serverless.service.custom &&
+      this.serverless.service.custom.lambdaEdgePreExistingCloudFront &&
+      this.serverless.service.custom.lambdaEdgePreExistingCloudFront.validStages
+    ) {
+      if (
+        this.serverless.service.custom.lambdaEdgePreExistingCloudFront.validStages.indexOf(
+          this.stage
+        ) < 0
+      ) {
+        return false
+      }
+    }
+    return true
   }
 
   async associateNonDefaultCacheBehaviors(cacheBehaviors, event, functionName, functionArn) {

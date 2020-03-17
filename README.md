@@ -32,3 +32,13 @@ Run deploy
 ```
 $ serverless deploy
 ```
+
+You can specify additional configurations a `lambdaEdgePreExistingCloudFront` value in the custom section of your serverless.yml file.
+A `validStages` value allows you to specify valid stage names for deploy Lambda@Edge.
+
+```yaml
+lambdaEdgePreExistingCloudFront:
+  validStages:
+    - staging
+    - production
+```
