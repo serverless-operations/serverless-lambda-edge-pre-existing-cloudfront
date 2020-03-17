@@ -27,3 +27,8 @@ functions:
 plugins:
   - serverless-lambda-edge-pre-existing-cloudfront
 ```
+
+And run deploy
+```
+$ serverless deploy
+```
