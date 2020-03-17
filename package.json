@@ -1,6 +1,6 @@
 {
   "name": "serverless-lambda-edge-pre-existing-cloudfront",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "The Serverless Framework plugin which creates Lambda@Edge against pre-existing CloudFront.",
   "main": "index.js",
   "author": "serverless-operations",
