@@ -11,11 +11,21 @@ class ServerlessLambdaEdgePreExistingCloudFront {
 
     this.hooks = {
       'after:aws:deploy:finalize:cleanup': async () => {
-        this.serverless.service.getAllFunctions().forEach(async (functionName) => {
-          const functionObj = this.serverless.service.getFunction(functionName)
-          if (functionObj.events) {
-            functionObj.events.forEach(async (event) => {
-              if (event.preExistingCloudFront && this.checkAllowedDeployStage()) {
+        await this.serverless.service
+          .getAllFunctions()
+          .filter((functionName) => {
+            const functionObj = this.serverless.service.getFunction(functionName)
+            return functionObj.events
+          })
+          .reduce((promiseOutput, functionName) => {
+            return promiseOutput.then(async () => {
+              const functionObj = this.serverless.service.getFunction(functionName)
+              const events = functionObj.events.filter(
+                (event) => event.preExistingCloudFront && this.checkAllowedDeployStage()
+              )
+
+              for (let idx = 0; idx < events.length; idx += 1) {
+                const event = events[idx]
                 const functionArn = await this.getlatestVersionLambdaArn(functionObj.name)
                 const config = await this.provider.request('CloudFront', 'getDistribution', {
                   Id: event.preExistingCloudFront.distributionId
@@ -37,18 +47,18 @@ class ServerlessLambdaEdgePreExistingCloudFront {
                   )
                 }
 
-                this.provider.request('CloudFront', 'updateDistribution', {
+                this.serverless.cli.consoleLog(
+                  `${functionArn} is associating to ${event.preExistingCloudFront.distributionId} CloudFront Distribution. waiting for deployed status.`
+                )
+
+                await this.provider.request('CloudFront', 'updateDistribution', {
                   Id: event.preExistingCloudFront.distributionId,
                   IfMatch: config.ETag,
                   DistributionConfig: config.DistributionConfig
                 })
-                this.serverless.cli.consoleLog(
-                  `${functionArn} is associating to ${event.preExistingCloudFront.distributionId} CloudFront Distribution. waiting for deployed status.`
-                )
               }
             })
-          }
-        })
+          }, Promise.resolve())
       }
     }
   }
