@@ -61,6 +61,39 @@ class ServerlessLambdaEdgePreExistingCloudFront {
           }, Promise.resolve())
       }
     }
+
+    this.serverless.configSchemaHandler.defineCustomProperties({
+      type: 'object',
+      properties: {
+        lambdaEdgePreExistingCloudFront: {
+          type: 'object',
+          properties: {
+            validStages: {
+              type: 'array',
+              items: { type: 'string' },
+              uniqueItems: true
+            }
+          }
+        },
+      }
+    })
+
+    this.serverless.configSchemaHandler.defineFunctionEvent('aws', 'preExistingCloudFront', {
+      type: 'object',
+      properties: {
+        distributionId: { type: 'string' },
+        eventType: { type: 'string' },
+        pathPattern: { type: 'string' },
+        includeBody: { type: 'boolean' }
+      },
+      required: [
+        'distributionId',
+        'eventType',
+        'pathPattern',
+        'includeBody'
+      ]
+    })
+
   }
 
   checkAllowedDeployStage() {
@@ -129,6 +162,7 @@ class ServerlessLambdaEdgePreExistingCloudFront {
     })
     return arn
   }
+
 }
 
 module.exports = ServerlessLambdaEdgePreExistingCloudFront
