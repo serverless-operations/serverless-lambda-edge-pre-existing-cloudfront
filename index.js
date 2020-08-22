@@ -121,7 +121,7 @@ class ServerlessLambdaEdgePreExistingCloudFront {
     const versions = await this.provider.request('Lambda', 'listVersionsByFunction', args)
 
     if (versions.NextMarker !== null) {
-      return await this.getlatestVersion(functionName, versions.NextMarker)
+      return await this.getlatestVersionLambdaArn(functionName, versions.NextMarker)
     }
     let arn
     versions.Versions.forEach(async (functionObj) => {
