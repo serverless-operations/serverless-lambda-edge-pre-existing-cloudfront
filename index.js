@@ -159,5 +159,4 @@ class ServerlessLambdaEdgePreExistingCloudFront {
     return arn
   }
 }
-
 module.exports = ServerlessLambdaEdgePreExistingCloudFront
