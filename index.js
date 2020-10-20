@@ -26,36 +26,39 @@ class ServerlessLambdaEdgePreExistingCloudFront {
 
               for (let idx = 0; idx < events.length; idx += 1) {
                 const event = events[idx]
-                const functionArn = await this.getlatestVersionLambdaArn(functionObj.name)
-                const config = await this.provider.request('CloudFront', 'getDistribution', {
-                  Id: event.preExistingCloudFront.distributionId
-                })
 
-                if (event.preExistingCloudFront.pathPattern === '*') {
-                  config.DistributionConfig.DefaultCacheBehavior.LambdaFunctionAssociations = await this.associateFunction(
-                    config.DistributionConfig.DefaultCacheBehavior.LambdaFunctionAssociations,
-                    event,
-                    functionObj.name,
-                    functionArn
+                if (event.preExistingCloudFront.stage == `${serverless.service.provider.stage}`) {
+                  const functionArn = await this.getlatestVersionLambdaArn(functionObj.name)
+                  const config = await this.provider.request('CloudFront', 'getDistribution', {
+                    Id: event.preExistingCloudFront.distributionId
+                  })
+  
+                  if (event.preExistingCloudFront.pathPattern === '*') {
+                    config.DistributionConfig.DefaultCacheBehavior.LambdaFunctionAssociations = await this.associateFunction(
+                      config.DistributionConfig.DefaultCacheBehavior.LambdaFunctionAssociations,
+                      event,
+                      functionObj.name,
+                      functionArn
+                    )
+                  } else {
+                    config.DistributionConfig.CacheBehaviors = await this.associateNonDefaultCacheBehaviors(
+                      config.DistributionConfig.CacheBehaviors,
+                      event,
+                      functionObj.name,
+                      functionArn
+                    )
+                  }
+  
+                  this.serverless.cli.consoleLog(
+                    `${functionArn} is associating to ${event.preExistingCloudFront.distributionId} CloudFront Distribution. waiting for deployed status.`
                   )
-                } else {
-                  config.DistributionConfig.CacheBehaviors = await this.associateNonDefaultCacheBehaviors(
-                    config.DistributionConfig.CacheBehaviors,
-                    event,
-                    functionObj.name,
-                    functionArn
-                  )
+  
+                  await this.provider.request('CloudFront', 'updateDistribution', {
+                    Id: event.preExistingCloudFront.distributionId,
+                    IfMatch: config.ETag,
+                    DistributionConfig: config.DistributionConfig
+                  })
                 }
-
-                this.serverless.cli.consoleLog(
-                  `${functionArn} is associating to ${event.preExistingCloudFront.distributionId} CloudFront Distribution. waiting for deployed status.`
-                )
-
-                await this.provider.request('CloudFront', 'updateDistribution', {
-                  Id: event.preExistingCloudFront.distributionId,
-                  IfMatch: config.ETag,
-                  DistributionConfig: config.DistributionConfig
-                })
               }
             })
           }, Promise.resolve())
@@ -85,9 +88,10 @@ class ServerlessLambdaEdgePreExistingCloudFront {
           distributionId: { type: 'string' },
           eventType: { type: 'string' },
           pathPattern: { type: 'string' },
-          includeBody: { type: 'boolean' }
+          includeBody: { type: 'boolean' }, 
+          stage: { type: 'string' }
         },
-        required: ['distributionId', 'eventType', 'pathPattern', 'includeBody']
+        required: ['distributionId', 'eventType', 'pathPattern', 'includeBody', 'stage']
       })
     }
   }
