@@ -31,35 +31,55 @@ class ServerlessLambdaEdgePreExistingCloudFront {
                   event.preExistingCloudFront.stage != `${serverless.service.provider.stage}`) { continue }
 
                 const functionArn = await this.getlatestVersionLambdaArn(functionObj.name)
-                const config = await this.provider.request('CloudFront', 'getDistribution', {
-                  Id: event.preExistingCloudFront.distributionId
-                })
-
-                if (event.preExistingCloudFront.pathPattern === '*') {
-                  config.DistributionConfig.DefaultCacheBehavior.LambdaFunctionAssociations = await this.associateFunction(
-                    config.DistributionConfig.DefaultCacheBehavior.LambdaFunctionAssociations,
-                    event,
-                    functionObj.name,
-                    functionArn
-                  )
-                } else {
-                  config.DistributionConfig.CacheBehaviors = await this.associateNonDefaultCacheBehaviors(
-                    config.DistributionConfig.CacheBehaviors,
-                    event,
-                    functionObj.name,
-                    functionArn
-                  )
-                }
 
                 this.serverless.cli.consoleLog(
                   `${functionArn} is associating to ${event.preExistingCloudFront.distributionId} CloudFront Distribution. waiting for deployed status.`
                 )
 
-                await this.provider.request('CloudFront', 'updateDistribution', {
-                  Id: event.preExistingCloudFront.distributionId,
-                  IfMatch: config.ETag,
-                  DistributionConfig: config.DistributionConfig
-                })
+                let retryCount = 5
+
+                const updateDistribution = async () => {
+                  const config = await this.provider.request('CloudFront', 'getDistribution', {
+                    Id: event.preExistingCloudFront.distributionId
+                  })
+
+                  if (event.preExistingCloudFront.pathPattern === '*') {
+                    config.DistributionConfig.DefaultCacheBehavior.LambdaFunctionAssociations = await this.associateFunction(
+                      config.DistributionConfig.DefaultCacheBehavior.LambdaFunctionAssociations,
+                      event,
+                      functionObj.name,
+                      functionArn
+                    )
+                  } else {
+                    config.DistributionConfig.CacheBehaviors = await this.associateNonDefaultCacheBehaviors(
+                      config.DistributionConfig.CacheBehaviors,
+                      event,
+                      functionObj.name,
+                      functionArn
+                    )
+                  }
+
+                  await this.provider
+                    .request('CloudFront', 'updateDistribution', {
+                      Id: event.preExistingCloudFront.distributionId,
+                      IfMatch: config.ETag,
+                      DistributionConfig: config.DistributionConfig
+                    })
+                    .catch(async (error) => {
+                      if (error.providerError.code === 'PreconditionFailed' && retryCount > 0) {
+                        this.serverless.cli.consoleLog(
+                          `received precondition failed error, retrying... (${retryCount}/5)`
+                        )
+                        retryCount -= 1
+                        await new Promise((res) => setTimeout(res, 5000))
+                        return updateDistribution()
+                      }
+                      this.serverless.cli.consoleLog(error)
+                      throw error
+                    })
+                }
+
+                await updateDistribution()
               }
             })
           }, Promise.resolve())
