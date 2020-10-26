@@ -26,6 +26,10 @@ class ServerlessLambdaEdgePreExistingCloudFront {
 
               for (let idx = 0; idx < events.length; idx += 1) {
                 const event = events[idx]
+
+                if (event.preExistingCloudFront.stage !== undefined &&
+                  event.preExistingCloudFront.stage != `${serverless.service.provider.stage}`) { continue }
+
                 const functionArn = await this.getlatestVersionLambdaArn(functionObj.name)
                 const config = await this.provider.request('CloudFront', 'getDistribution', {
                   Id: event.preExistingCloudFront.distributionId
@@ -85,7 +89,8 @@ class ServerlessLambdaEdgePreExistingCloudFront {
           distributionId: { type: 'string' },
           eventType: { type: 'string' },
           pathPattern: { type: 'string' },
-          includeBody: { type: 'boolean' }
+          includeBody: { type: 'boolean' },
+          stage: { type: 'string' }
         },
         required: ['distributionId', 'eventType', 'pathPattern', 'includeBody']
       })
