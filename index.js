@@ -82,8 +82,6 @@ class ServerlessLambdaEdgePreExistingCloudFront {
                 }
 
                 await updateDistribution()
-
-                this.serverless.cli.consoleLog(`Event ${event.preExistingCloudFront.eventType - event.preExistingCloudFront.pathPattern} has been successfully associated to ${resolvedDistributionId} CloudFront Distribution.`)
               }
             })
           }, Promise.resolve())
