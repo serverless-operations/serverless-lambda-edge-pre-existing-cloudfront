@@ -31,16 +31,19 @@ class ServerlessLambdaEdgePreExistingCloudFront {
                   event.preExistingCloudFront.stage != `${serverless.service.provider.stage}`) { continue }
 
                 const functionArn = await this.getlatestVersionLambdaArn(functionObj.name)
-
+                const resolvedDistributionId = await (event.preExistingCloudFront.distributionId['Fn::ImportValue']
+                    ? this.resolveCfImportValue(this.provider, event.preExistingCloudFront.distributionId['Fn::ImportValue'])
+                    : event.preExistingCloudFront.distributionId
+                )
                 this.serverless.cli.consoleLog(
-                  `${functionArn} is associating to ${event.preExistingCloudFront.distributionId} CloudFront Distribution. waiting for deployed status.`
+                  `${functionArn} is associating to ${resolvedDistributionId} CloudFront Distribution. waiting for deployed status.`
                 )
 
                 let retryCount = 5
 
                 const updateDistribution = async () => {
                   const config = await this.provider.request('CloudFront', 'getDistribution', {
-                    Id: event.preExistingCloudFront.distributionId
+                    Id: resolvedDistributionId
                   })
 
                   if (event.preExistingCloudFront.pathPattern === '*') {
@@ -61,7 +64,7 @@ class ServerlessLambdaEdgePreExistingCloudFront {
 
                   await this.provider
                     .request('CloudFront', 'updateDistribution', {
-                      Id: event.preExistingCloudFront.distributionId,
+                      Id: resolvedDistributionId,
                       IfMatch: config.ETag,
                       DistributionConfig: config.DistributionConfig
                     })
@@ -80,6 +83,7 @@ class ServerlessLambdaEdgePreExistingCloudFront {
                 }
 
                 await updateDistribution()
+                this.serverless.cli.consoleLog(`${functionArn} has been successfully associated to ${resolvedDistributionId} CloudFront Distribution.`)
               }
             })
           }, Promise.resolve())
@@ -106,7 +110,9 @@ class ServerlessLambdaEdgePreExistingCloudFront {
       this.serverless.configSchemaHandler.defineFunctionEvent('aws', 'preExistingCloudFront', {
         type: 'object',
         properties: {
-          distributionId: { type: 'string' },
+          distributionId: {
+            anyOf: [{ type: 'string' }, { type: 'object' }],
+          },
           eventType: { type: 'string' },
           pathPattern: { type: 'string' },
           includeBody: { type: 'boolean' },
@@ -182,6 +188,20 @@ class ServerlessLambdaEdgePreExistingCloudFront {
       arn = functionObj.FunctionArn
     })
     return arn
+  }
+
+  resolveCfImportValue(provider, name, sdkParams = {}) {
+    return provider.request('CloudFormation', 'listExports', sdkParams).then(result => {
+      const targetExportMeta = result.Exports.find(exportMeta => exportMeta.Name === name);
+      if (targetExportMeta) return targetExportMeta.Value;
+      if (result.NextToken) {
+        return this.resolveCfImportValue(provider, name, { NextToken: result.NextToken });
+      }
+
+      throw new Error(
+        `Could not resolve Fn::ImportValue with name ${name}. Are you sure this value is exported ?`
+      );
+    });
   }
 }
 module.exports = ServerlessLambdaEdgePreExistingCloudFront
