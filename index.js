@@ -23,9 +23,6 @@ class ServerlessLambdaEdgePreExistingCloudFront {
               const events = functionObj.events.filter(
                 (event) => event.preExistingCloudFront && this.checkAllowedDeployStage()
               )
-              this.serverless.cli.consoleLog(
-                `${functionArn} is associating to ${resolvedDistributionId} CloudFront Distribution. waiting for deployed status.`
-              )
               for (let idx = 0; idx < events.length; idx += 1) {
                 const event = events[idx]
 
@@ -36,6 +33,9 @@ class ServerlessLambdaEdgePreExistingCloudFront {
                 const resolvedDistributionId = await (event.preExistingCloudFront.distributionId['Fn::ImportValue']
                     ? this.resolveCfImportValue(this.provider, event.preExistingCloudFront.distributionId['Fn::ImportValue'])
                     : event.preExistingCloudFront.distributionId
+                )
+                this.serverless.cli.consoleLog(
+                  `${functionArn} (Event: ${event.preExistingCloudFront.eventType}, pathPattern: ${event.preExistingCloudFront.pathPattern}) is associating to ${resolvedDistributionId} CloudFront Distribution. waiting for deployed status.`
                 )
 
                 let retryCount = 5
