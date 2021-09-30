@@ -4,6 +4,7 @@
   "description": "The Serverless Framework plugin which creates Lambda@Edge against pre-existing CloudFront.",
   "main": "index.js",
   "author": "serverless-operations",
+  "repository": "serverless-operations/serverless-lambda-edge-pre-existing-cloudfront",
   "license": "MIT",
   "scripts": {
     "lint": "eslint .",
