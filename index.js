@@ -27,7 +27,7 @@ class ServerlessLambdaEdgePreExistingCloudFront {
                 const event = events[idx]
 
                 if (event.preExistingCloudFront.stage !== undefined &&
-                  event.preExistingCloudFront.stage != `${serverless.service.provider.stage}`) { continue }
+                  event.preExistingCloudFront.stage != `${this.stage}`) { continue }
 
                 const functionArn = await this.getlatestVersionLambdaArn(functionObj.name)
                 const resolvedDistributionId = await (event.preExistingCloudFront.distributionId['Fn::ImportValue']
