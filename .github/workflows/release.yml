@@ -39,7 +39,7 @@ jobs:
   build:
     if: ${{ !contains(github.ref, 'refs/tags/') }}
     needs: changed_files
-    # TODO: back to @v1 before merge
+    # TODO: back to Flaconi/github-reusable-workflow@v1 before merge
     uses: Flaconi/github-reusable-workflow/.github/workflows/build-node.yml@npm-public-workflows
     with:
       node_version: "24"
@@ -48,7 +48,7 @@ jobs:
   prerelease:
     needs: [changed_files, build]
     if: ${{ needs.changed_files.outputs.src_any_changed == 'true' && !contains(github.ref, 'refs/tags/') }}
-    # TODO: back to @v1 before merge
+    # TODO: back to Flaconi/github-reusable-workflow@v1 before merge
     uses: Flaconi/github-reusable-workflow/.github/workflows/publish-node.yml@npm-public-workflows
     with:
       node_version: "24"
@@ -60,7 +60,7 @@ jobs:
 
   publish:
     if: ${{ contains(github.ref, 'refs/tags/') }}
-    # TODO: back to @v1 before merge
+    # TODO: back to Flaconi/github-reusable-workflow@v1 before merge
     uses: Flaconi/github-reusable-workflow/.github/workflows/publish-node.yml@npm-public-workflows
     with:
       node_version: "24"
