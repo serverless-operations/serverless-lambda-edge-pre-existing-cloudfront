@@ -30,6 +30,8 @@ updates:
       production-major:
         dependency-type: production
         update-types: [major]
+      # typescript is an alias (npm:@typescript/typescript6) next to @typescript/native (TS 7);
+      # a bump must keep both aliases, see README "TypeScript toolchain"
       development:
         dependency-type: development
   - package-ecosystem: github-actions

@@ -5,4 +5,5 @@ src:
   - yarn.lock
   - .yarnrc.yml
   - .yarn/**
-  - changed-files.yml
+  - changed-files.yml  - tsconfig.json
+  - tsconfig.build.json

@@ -1,59 +1,69 @@
 ---
-    name: Release deploy
-    
-    on:
-      push:
-        branches: [ "**" ]
-        tags-ignore: [ "**" ]
-      release:
-        types: [ published ]
-    
-    jobs:
-      changed_files:
-        if: ${{ !contains(github.ref, 'refs/tags/') }}
-        runs-on: ubuntu-24.04
-        name: Test changed-files
-        outputs:
-          src_any_changed: ${{ steps.changed-files.outputs.src_any_changed }}
-        steps:
-          - uses: actions/checkout@v5
-            with:
-              fetch-depth: 0
-          - uses: nrwl/nx-set-shas@v4
-            id: last_successful_commit_push
-            with:
-              main-branch-name: ${{ github.event.repository.default_branch }}
-              workflow-id: 'release.yml'
-          - name: Get changed files
-            id: changed-files
-            uses: tj-actions/changed-files@v47
-            with:
-              files_yaml_from_source_file: changed-files.yml
-              base_sha: ${{ steps.last_successful_commit_push.outputs.base }}
-          - name: List all changed files
-            run: |
-              echo "${{ toJSON(steps.changed-files.outputs) }}"
-      build:
-        if: ${{ !contains(github.ref, 'refs/tags/') }}
-        needs: changed_files
-        uses: ./.github/workflows/build.yml
+name: Release deploy
+
+on:
+  push:
+    branches: [ "**" ]
+    tags-ignore: [ "**" ]
+  release:
+    types: [ published ]
+
+# The shared build/publish workflows come from the public Flaconi/github-reusable-workflow, because
+# this repository is public and can't call the private Flaconi/github-actions ones.
+# This file name is what the npm Trusted Publisher names; keep it as release.yml.
+jobs:
+  changed_files:
+    if: ${{ !contains(github.ref, 'refs/tags/') }}
+    runs-on: ubuntu-24.04
+    name: Test changed-files
+    outputs:
+      src_any_changed: ${{ steps.changed-files.outputs.src_any_changed }}
+    steps:
+      - uses: actions/checkout@v7
         with:
-          skip: ${{ github.event.pusher.name != 'bot-shop-ci' && needs.changed_files.outputs.src_any_changed != 'true' }}
-        secrets: inherit
-      prerelease:
-        needs: [changed_files, build]
-        if: ${{ needs.changed_files.outputs.src_any_changed == 'true' && !contains(github.ref, 'refs/tags/') }}
-        uses: ./.github/workflows/publish.yml
+          fetch-depth: 0
+      - uses: nrwl/nx-set-shas@v5
+        id: last_successful_commit_push
         with:
-          branch: ${{ github.ref_name }}
-          version: --preid beta.${{ github.run_id }} prerelease
-          yarn_command_post_version: build
-          pre_release: true
-        secrets: inherit
-    
-      publish:
-        if: ${{ contains(github.ref, 'refs/tags/') }}
-        uses: ./.github/workflows/publish.yml
+          main-branch-name: ${{ github.event.repository.default_branch }}
+          workflow-id: 'release.yml'
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v47
         with:
-          yarn_command_post_version: build
-        secrets: inherit
+          files_yaml_from_source_file: changed-files.yml
+          base_sha: ${{ steps.last_successful_commit_push.outputs.base }}
+      - name: List all changed files
+        run: |
+          echo "${{ toJSON(steps.changed-files.outputs) }}"
+  build:
+    if: ${{ !contains(github.ref, 'refs/tags/') }}
+    needs: changed_files
+    # TODO: back to @v1 before merge
+    uses: Flaconi/github-reusable-workflow/.github/workflows/build-node.yml@npm-public-workflows
+    with:
+      node_version: "24"
+      skip: ${{ github.event.pusher.name != 'bot-shop-ci' && needs.changed_files.outputs.src_any_changed != 'true' }}
+    secrets: inherit
+  prerelease:
+    needs: [changed_files, build]
+    if: ${{ needs.changed_files.outputs.src_any_changed == 'true' && !contains(github.ref, 'refs/tags/') }}
+    # TODO: back to @v1 before merge
+    uses: Flaconi/github-reusable-workflow/.github/workflows/publish-node.yml@npm-public-workflows
+    with:
+      node_version: "24"
+      branch: ${{ github.ref_name }}
+      version: --preid beta.${{ github.run_id }} prerelease
+      yarn_command_post_version: build
+      pre_release: true
+    secrets: inherit
+
+  publish:
+    if: ${{ contains(github.ref, 'refs/tags/') }}
+    # TODO: back to @v1 before merge
+    uses: Flaconi/github-reusable-workflow/.github/workflows/publish-node.yml@npm-public-workflows
+    with:
+      node_version: "24"
+      branch: ${{ github.event.repository.default_branch }}
+      yarn_command_post_version: build
+    secrets: inherit

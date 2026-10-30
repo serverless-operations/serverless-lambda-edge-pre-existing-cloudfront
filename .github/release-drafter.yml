@@ -1,21 +1,32 @@
-# Configuration for Release Drafter: https://github.com/toolmantim/release-drafter
+# Configuration for Release Drafter: https://github.com/release-drafter/release-drafter
 template: |
   ## Changes
 
   $CHANGES
-name-template: '$RESOLVED_VERSION 🌈'
-tag-template: '$RESOLVED_VERSION'
+name-template: 'v$RESOLVED_VERSION 🌈'
+tag-template: 'v$RESOLVED_VERSION'
 categories:
+  - title: '💥 Breaking Changes'
+    semver-increment: major
+    exclusive: true
+    labels:
+      - breaking-change
   - title: '🚀 Features'
+    semver-increment: minor
+    exclusive: true
     labels:
       - feature
       - enhancement
   - title: '🐛 Bug Fixes'
+    semver-increment: patch
+    exclusive: true
     labels:
       - fix
       - bugfix
       - bug
   - title: '🧰 Maintenance'
+    semver-increment: patch
+    exclusive: true
     labels:
       - chore
       - dependencies
@@ -24,11 +35,11 @@ change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add
 version-resolver:
   major:
     labels:
-      - 'major'
+      - major
   minor:
     labels:
-      - 'minor'
+      - minor
   patch:
     labels:
-      - 'patch'
+      - patch
   default: patch

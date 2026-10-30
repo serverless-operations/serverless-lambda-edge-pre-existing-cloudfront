@@ -53,3 +53,5 @@ tmpdirs-serverless
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+# Reports
+eslint-report.json

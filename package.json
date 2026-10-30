@@ -1,44 +1,59 @@
 {
   "name": "@flaconi/serverless-lambda-edge-pre-existing-cloudfront",
-  "version": "2.0.0-beta.19363850190.0",
+  "version": "2.0.0",
   "description": "The Serverless Framework plugin which creates Lambda@Edge against pre-existing CloudFront.",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "author": "flaconi",
-  "repository": "https://github.com/flaconi/serverless-lambda-edge-pre-existing-cloudfront",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Flaconi/serverless-lambda-edge-pre-existing-cloudfront.git"
+  },
   "license": "MIT",
   "files": [
     "dist",
     "README.md",
     "LICENSE.txt"
   ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "restricted"
+  },
   "scripts": {
-    "compile": "tsc",
-    "build": "rm -rf dist && tsc",
-    "lint": "eslint .",
-    "fmt": "eslint --fix .",
-    "test": "exit 0"
+    "compile": "tsc --noEmit",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "tsc6": "tsc6 --noEmit",
+    "lint": "eslint src __tests__",
+    "lint:report": "eslint src __tests__ -f json -o eslint-report.json",
+    "fmt": "eslint --fix src __tests__",
+    "test": "vitest run --coverage"
   },
   "devDependencies": {
-    "@types/node": "^24.10.1",
-    "@types/serverless": "^3.12.27",
-    "@typescript-eslint/parser": "^8.46.4",
-    "eslint": "^9.39.1",
+    "@types/node": "^24.19.2",
+    "@types/serverless": "^3.12.28",
+    "@typescript-eslint/parser": "^8.72.1",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "@vitest/coverage-v8": "^5.0.5",
+    "aws-sdk-client-mock": "^4.1.0",
+    "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-import-resolver-typescript": "^4.4.5",
     "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-prettier": "^5.5.4",
-    "husky": "^9.1.7",
-    "lint-staged": "^16.2.6",
-    "osls": "^3.59.2",
-    "prettier": "^3.6.2",
-    "semantic-release": "^25.0.2",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.46.4"
+    "eslint-plugin-prettier": "^5.5.7",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "typescript-eslint": "^8.72.1",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
   },
   "dependencies": {
-    "@aws-sdk/client-cloudformation": "^3.931.0",
-    "@aws-sdk/client-cloudfront": "^3.931.0",
-    "@aws-sdk/client-lambda": "^3.931.0"
+    "@aws-sdk/client-cloudformation": "^3.1159.0",
+    "@aws-sdk/client-cloudfront": "^3.1159.0",
+    "@aws-sdk/client-lambda": "^3.1159.0"
   },
-  "packageManager": "yarn@4.11.0"
+  "packageManager": "yarn@4.17.1"
 }
