@@ -40,7 +40,7 @@ jobs:
     if: ${{ !contains(github.ref, 'refs/tags/') }}
     needs: changed_files
     # TODO: back to Flaconi/github-reusable-workflow@v1 before merge
-    uses: Flaconi/github-reusable-workflow/.github/workflows/build-node.yml@npm-public-workflows
+    uses: Engerim/github-reusable-workflow/.github/workflows/build-node.yml@npm-public-workflows
     with:
       node_version: "24"
       skip: ${{ github.event.pusher.name != 'bot-shop-ci' && needs.changed_files.outputs.src_any_changed != 'true' }}
@@ -49,7 +49,7 @@ jobs:
     needs: [changed_files, build]
     if: ${{ needs.changed_files.outputs.src_any_changed == 'true' && !contains(github.ref, 'refs/tags/') }}
     # TODO: back to Flaconi/github-reusable-workflow@v1 before merge
-    uses: Flaconi/github-reusable-workflow/.github/workflows/publish-node.yml@npm-public-workflows
+    uses: Engerim/github-reusable-workflow/.github/workflows/publish-node.yml@npm-public-workflows
     with:
       node_version: "24"
       branch: ${{ github.ref_name }}
@@ -61,7 +61,7 @@ jobs:
   publish:
     if: ${{ contains(github.ref, 'refs/tags/') }}
     # TODO: back to Flaconi/github-reusable-workflow@v1 before merge
-    uses: Flaconi/github-reusable-workflow/.github/workflows/publish-node.yml@npm-public-workflows
+    uses: Engerim/github-reusable-workflow/.github/workflows/publish-node.yml@npm-public-workflows
     with:
       node_version: "24"
       branch: ${{ github.event.repository.default_branch }}
